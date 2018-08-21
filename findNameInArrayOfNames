@@ -3,6 +3,7 @@
  Austin:   .asciiz "Austin\n"
  Catherine:.asciiz "Catherine\n"
  Elle:     .asciiz "Elle\n"
+
  names:    .word Ryan, Austin, Catherine, Elle
  iterator: .word 0
  size:     .word 3
@@ -12,8 +13,8 @@
 la  $t0 names
 lw  $t1 iterator
 lw  $t2 size
-addi $t4 $zero 0
-add $t4 $t4 4
+addi $t4 $zero 4        #array positions are 0,4,8,12
+
 
 # print(names[i])
 begin_loop:
