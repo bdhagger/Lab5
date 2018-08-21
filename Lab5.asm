@@ -50,6 +50,7 @@
 # t0 holds the first program argument
 # t1 holds the first character of the program argument
 # t2 holds the string "1" to compare with 1st character
+# t3 is used as an index
 
 # s0 stores the 32-bit sign extended value entered by the user
 # v0 sets the syscalls to print strings and characters only
@@ -59,13 +60,12 @@
 # PROGRAM
 
 .data 
-       bn: .asciiz "You entered the binary number:\n"
-       hx: .asciiz "The hex representation of the sign-extended number is:\n"
-       dc: .asciiz "The number in decimal is:\n"
-       nl: .asciiz "\n\n"
+       bn:  .asciiz "You entered the binary number:\n"
+       hx:  .asciiz "The hex representation of the sign-extended number is:\n"
+       dc:  .asciiz "The number in decimal is:\n"
+       nl:  .asciiz "\n\n"
        one: .asciiz "1"
        
-
 
 .text
        la      $a0 bn        # print binary message
@@ -106,21 +106,34 @@ back1:
        li      $v0 4
        syscall
        
-loop: 
-       beq $t3 $t4 next
        
-       j loop
+       addi    $t4 $zero 0   # initialize index to 0
        
-next:
-       move $a0 $s0          # print value of s0
-       li $v0 1
+while:
+       beq     $t4 8 exit
+       lb      $t3 ($t0)    # put first character of arg string into t3
+       move    $a0 $t3
+       li      $v0 11
+       syscall
+      
+       addi    $t0 $t0 1
+       li      $v0 4
+       la      $a0 nl        # print a new line
+       syscall
+       
+       addi    $t4 $t4 1
+       j while
+
+exit:
+       move    $a0 $s0       # print value of s0
+       li      $v0 1
        syscall
        
        li      $v0 10        # end
        syscall
      
 rEq:
-       add $s0 $s0 -256      # sign extend by adding the 24 1s in front of the 8 bit binary number
+       add     $s0 $s0 -256      # sign extend by adding the 24 1s in front of the 8 bit binary number
        j back1
        
        
@@ -133,31 +146,3 @@ rEq:
   #la      $a0 hx     # print hex message
   #li      $v0 4
   #syscall
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
