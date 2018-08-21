@@ -68,73 +68,72 @@
        
 
 .text
-       la      $a0 bn        # print binary message
-       li      $v0 4 
+       la      $a0   bn          # print binary message
+       li      $v0   4 
        syscall               
 
-       lw      $t0 ($a1)    # read and print program argument string
-       move    $a0 $t0
-       li      $v0 4
+       lw      $t0   ($a1)       # read and print program argument string
+       move    $a0   $t0
+       li      $v0   4
        syscall
 
-       la      $a0 nl       # print a new line
-       li      $v0 4
-       syscall
+       #la      $a0 nl         # print a new line
+       #li      $v0 4
+       #syscall
        
-       lb      $t1 ($t0)    # put first character of arg string into t1
-       move    $a0 $t1
-       li      $v0 11
-       syscall
+       lb      $t1   ($t0)       # put first character of arg string into t1
+       move    $a0   $t1
+       #li      $v0 11
+       #syscall
        
-       la      $a0 nl       # print a new line
-       li      $v0 4
-       syscall
+       #la      $a0 nl         # print a new line
+       #li      $v0 4
+       #syscall
        
        
-       lb      $t2 one      # load string "1" into t2
-       move    $a0 $t2
-       li      $v0 11
-       syscall
+       lb      $t2   one         # load string "1" into t2
+       move    $a0   $t2
+       #li      $v0 11
+       #syscall
        
-       li      $s0 0        # initialize s0 to zero
+       li      $s0   0           # initialize s0 to zero
        
-       beq     $t1 $t2 rEq
+       beq     $t1   $t2   rEq
        
  
 back1: 
-       la      $a0 nl        # print a new line
-       li      $v0 4
+       la      $a0   nl          # print a new line
+       li      $v0   4
        syscall
        
-       
-       addi    $t4 $zero 0   # initialize index to 0
+       addi    $t4   $zero 0     # initialize index to 0
        
 while:
-       beq     $t4 8 exit
-       lb      $t3 ($t0)    # put first character of arg string into t3
-       move    $a0 $t3
-       li      $v0 11
+       beq     $t4   8     exit
+       lb      $t3   ($t0)       # put first character of arg string into t3
+       move    $a0   $t3
+       li      $v0   11
        syscall
       
-       addi    $t0 $t0 1
-       li      $v0 4
-       la      $a0 nl        # print a new line
+       addi    $t0   $t0   1
+       li      $v0   4
+       la      $a0   nl          # print a new line
        syscall
        
-       addi    $t4 $t4 1
-       j while
+       addi    $t4   $t4   1
+       j       while
 
 exit:
-       move    $a0 $s0       # print value of s0
-       li      $v0 1
+       move    $a0   $s0         # print value of s0
+       li      $v0   1
        syscall
        
-       li      $v0 10        # end
+       li      $v0   10          # end
        syscall
      
 rEq:
-       add     $s0 $s0 -256      # sign extend by adding the 24 1s in front of the 8 bit binary number
-       j back1
+       add     $s0   $s0   -256  # sign extend by adding the 24 1s in front of the 8 bit binary number
+       j       back1
        
        
 
