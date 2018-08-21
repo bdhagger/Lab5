@@ -3,7 +3,6 @@
  Austin:   .asciiz "Austin\n"
  Catherine:.asciiz "Catherine\n"
  Elle:     .asciiz "Elle\n"
- re:       .asciiz " it's A "
  names:    .word Ryan, Austin, Catherine, Elle
  iterator: .word 0
  size:     .word 3
