@@ -44,13 +44,14 @@
 
 # REGISTER USAGE
 
-# a0 stores the ascii strings to be printed
+# a0 stores what will be printed
 # a1 is the first program argument
 
 # t0 holds the first program argument
-# t1 holds the first character of the program argument
+# t1 holds a character of the program argument
 # t2 holds the string "1" to compare with 1st character
 # t3 is used as an index
+# t4 is used for a power
 
 # s0 stores the 32-bit sign extended value entered by the user
 # v0 sets the syscalls to print strings and characters only
@@ -65,6 +66,7 @@
        dc:  .asciiz "The number in decimal is:\n"
        nl:  .asciiz "\n\n"
        one: .asciiz "1"
+       re:  .asciiz " is equal to 1"
        
 
 .text
@@ -106,22 +108,40 @@ back1:
        li      $v0   4
        syscall
        
-       addi    $t4   $zero 0     # initialize index to 0
+       addi    $t3   $zero 0     # initialize index to 0
+       addi    $t4   $zero 8     # initialize power to 7
        
 while:
-       beq     $t4   8     exit
-       lb      $t3   ($t0)       # put first character of arg string into t3
-       move    $a0   $t3
+       beq     $t3   8     exit
+       lb      $t1   ($t0)       # put first character of arg string into t3
+       move    $a0   $t1
        li      $v0   11
        syscall
       
+       beq     $t1   $t2   rEq2 
+
+midw:      
        addi    $t0   $t0   1
        li      $v0   4
        la      $a0   nl          # print a new line
        syscall
        
-       addi    $t4   $t4   1
+       addi    $t3   $t3   1
        j       while
+
+rEq2:
+       #sub     $t4 $t4 $t3
+       move    $a0 $t3         # print the power
+       li      $v0 1
+       syscall
+       
+       sub     $t4 $t4 1
+       move    $a0 $t4         # print the power
+       li      $v0 1
+       syscall
+       
+       j       midw
+
 
 exit:
        move    $a0   $s0         # print value of s0
