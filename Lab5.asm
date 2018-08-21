@@ -49,6 +49,7 @@
 
 # t0 holds the first program argument
 # t1 holds the first character of the program argument
+# t2 holds the string "1" to compare with 1st character
 
 # s0 stores the 32-bit sign extended value entered by the user
 # v0 sets the syscalls to print strings and characters only
@@ -99,20 +100,27 @@
        
        beq     $t1 $t2 rEq
        
+ 
 back1: 
        la      $a0 nl        # print a new line
        li      $v0 4
        syscall
        
-       move $a0 $s0
+loop: 
+       beq $t3 $t4 next
+       
+       j loop
+       
+next:
+       move $a0 $s0          # print value of s0
        li $v0 1
        syscall
        
-       li      $v0 10
+       li      $v0 10        # end
        syscall
      
 rEq:
-       add $s0 $s0 -256      
+       add $s0 $s0 -256      # sign extend by adding the 24 1s in front of the 8 bit binary number
        j back1
        
        
