@@ -47,13 +47,9 @@
 # a0 stores what will be printed
 # a1 is the first program argument
 
-# t0 holds the first program argument
-# t1 holds a character of the program argument
-# t2 holds the string "1" to compare with 1st character
-# t3 is used as an index
-# t4 is used for a power
-# s0 holds the value of the binary position (2^(7 - i))
-# t6 holds integer value for 4 bits of the string
+# t0 holds the address of the program argument
+# t1 
+
 
 # s0 stores the 32-bit sign extended value entered by the user
 # v0 sets the syscalls to print strings and characters only
@@ -67,9 +63,7 @@
        hx:  .asciiz "\nThe hex representation of the sign-extended number is:\n"
        dc:  .asciiz "\n\nThe number in decimal is:\n"
        nl:  .asciiz "\n"
-       one: .asciiz "1"
        ox:  .asciiz "0x"
-       se:  .asciiz " found a 1 "
        hex_lut:  .byte '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' #lookup table from binary to ascii value as hex for 8 bits
 
 .text
@@ -86,36 +80,32 @@
        li      $v0   4
        syscall
 
-       lb      $t1   ($t0)       # put first character of arg string into t1
-       move    $a0   $t1
-       
-       lb      $t2   one         # load string "1" into t2
-       move    $a0   $t2
-       
        li      $s0   0           # initialize s0 to zero
-       
        
 #---------------------------sign extension------------------------------
 
-intFromStr:  li  $t3, 0x00000080   #t3 holds mask
-             li  $t2, 0  #loop counter
-             li  $s0, 0x00000000 #final int
+intFromStr:  
+       li  $t3, 0x00000080   #t3 holds mask
+       li  $t2, 0            #loop counter
+       li  $s0, 0x00000000  #final int
             
-loop900:     add $t4, $t0, $t2  #get address of charecter
-             lb  $t4, ($t4)     #store charecter iun t4
-             beq $t4, 48, shiftMask
+loop900:     
+       add $t4, $t0, $t2  #get address of charecter
+       lb  $t4, ($t4)     #store charecter iun t4
+       beq $t4, 48, shiftMask
              
-             or  $s0, $s0, $t3
-shiftMask:   srl $t3, $t3, 1
-             add $t2, $t2, 1       
-             bne $t2, 8,  loop900
+       or  $s0, $s0, $t3
+       
+shiftMask:   
+
+       srl $t3, $t3, 1
+       add $t2, $t2, 1       
+       bne $t2, 8,  loop900
              
-             li $t2, 0x00000080
-             and $t2, $t2, $s0
-             beq $t2, 0, done 
-             addi $s0, $s0, 0xFFFFFF00          
-             
-done:        add $t4, $t4, 0 #NONDONSADNOSANDOSDNGFKSDNGNFDKJLGNDFSKLGNDWKSL
+       li $t2, 0x00000080
+       and $t2, $t2, $s0
+       beq $t2, 0, hextime 
+       addi $s0, $s0, 0xFFFFFF00          
 
 #-----------------------------hex conversion------------------------------
 
@@ -170,7 +160,7 @@ printLoop: sub     $t1, $t1, 1     #sub loop counter
        syscall
        bne     $t1, 0 printLoop
            
-#-----------------------end of hex conversion------------------------------
+#-----------------------decimal conversion------------------------------
 
 dectime:  
        la      $a0 dc             # print dec message
@@ -191,61 +181,67 @@ binToSignedDecimal:
        bne  $t1, 0, twos_cmp 
          
 subNum:sub $t2, $t2, 1
-       b incOnes
+       j incOnes
        
 check: bne $t2, 0  subNum     
          
-       b printDecimal   #MEEEEEEEEEEEEEEEEEEEEEEEEEEEEE          
+       j printDecimal            
        
 twos_cmp:
-        xori $t2, 0xFFFFFFFF     
-        addi $t2, $t2, 1
-        b subNum
+       xori $t2, 0xFFFFFFFF     
+       addi $t2, $t2, 1
+       j subNum
 
         
-       #r5 r4 r3
-incOnes: add $t3, $t3, 1
-         bne $t3, 10, check
+         #r5 r4 r3
+incOnes: 
+      add $t3, $t3, 1
+      bne $t3, 10, check
          
-incTens: li, $t3, 0 #clear ones place    
-         addi $t4,  $t4, 1
-         bne $t4, 10, check
+incTens: 
+      li, $t3, 0 #clear ones place    
+      addi $t4,  $t4, 1
+      bne $t4, 10, check
  
-incHuns:  li, $t4, 0 #clear tens place    
-          addi $t5,  $t5, 1
-          b check         
+incHuns:  
+      li, $t4, 0 #clear tens place    
+      addi $t5,  $t5, 1
+      j check         
           
             
 printDecimal:
-         
-            beq $t1, 0, printHund
-            li   $a0, 45           #print Minus Sign
-            li     $v0, 11
-            syscall
+      beq $t1, 0, printHund
+      li   $a0, 45           #print minus Sign
+      li     $v0, 11
+      syscall
           
- printHund: la   $t7,  hex_lut         
+ printHund: 
+       la   $t7,  hex_lut         
  
-            beq $t5, 0, printTens   #print Hundreds Place if it isn't Zero
-            add $t5, $t5, $t7
-            lb  $t5, ($t5)
-            move $a0, $t5                     
-            li     $v0, 11
-            syscall 
-            b printTensDef
+       beq $t5, 0, printTens   #print Hundreds Place if it isn't Zero
+       add $t5, $t5, $t7
+       lb  $t5, ($t5)
+       move $a0, $t5                     
+       li     $v0, 11
+       syscall 
+       j printTensDef
             
-printTens:    beq $t4, 0, printOnes   #print tens place if it isn't a leading zero
-printTensDef: add $t4, $t4, $t7
-              lb  $t4, ($t4)
-              move $a0, $t4                     
-              li     $v0, 11
-              syscall
+printTens:    
+       beqz $t4  printOnes   #print tens place if it isn't a leading zero
+
+printTensDef: 
+       add $t4, $t4, $t7
+       lb  $t4, ($t4)
+       move $a0, $t4                     
+       li     $v0, 11
+       syscall
    
- printOnes:   add  $t3, $t3, $t7
-              lb   $t3, ($t3)
-              move $a0, $t3                     
-              li   $v0, 11
-              syscall     
-              
+ printOnes:   
+       add  $t3, $t3, $t7
+       lb   $t3, ($t3)
+       move $a0, $t3                     
+       li   $v0, 11
+       syscall     
 
        la      $a0 nl             # print new line
        li      $v0 4
