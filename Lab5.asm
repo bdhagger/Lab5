@@ -52,7 +52,7 @@
 # t2 holds the string "1" to compare with 1st character
 # t3 is used as an index
 # t4 is used for a power
-# t5 holds the value of the binary position (2^(7 - i))
+# s0 holds the value of the binary position (2^(7 - i))
 # t6 holds integer value for 4 bits of the string
 
 # s0 stores the 32-bit sign extended value entered by the user
@@ -99,21 +99,21 @@
 
 intFromStr:  li  $t3, 0x00000080   #t3 holds mask
              li  $t2, 0  #loop counter
-             li  $t5, 0x00000000 #final int
+             li  $s0, 0x00000000 #final int
             
 loop900:     add $t4, $t0, $t2  #get address of charecter
              lb  $t4, ($t4)     #store charecter iun t4
              beq $t4, 48, shiftMask
              
-             or  $t5, $t5, $t3
+             or  $s0, $s0, $t3
 shiftMask:   srl $t3, $t3, 1
              add $t2, $t2, 1       
              bne $t2, 8,  loop900
              
              li $t2, 0x00000080
-             and $t2, $t2, $t5
+             and $t2, $t2, $s0
              beq $t2, 0, done 
-             addi $t5, $t5, 0xFFFFFF00          
+             addi $s0, $s0, 0xFFFFFF00          
              
 done:        add $t4, $t4, 0 #NONDONSADNOSANDOSDNGFKSDNGNFDKJLGNDFSKLGNDWKSL
 
@@ -138,7 +138,7 @@ hextime:
        
 bin2hex:  
        la      $t7,  hex_lut
-       move    $t0, $t5 # $t0 contains a signed 32 bit number
+       move    $t0, $s0 # $t0 contains a signed 32 bit number
        li      $t1, 8  #loop counter
 
               
@@ -157,17 +157,18 @@ loop:  sub     $t1, $t1, 1     #sub loop counter
        
        
 
-printHexFromStack:  li    $t1, 8  #loop counter
+printHexFromStack:  
+       li    $t1, 8  #loop counter
                     addi  $sp, $sp, 28
                     
 printLoop: sub     $t1, $t1, 1     #sub loop counter  
-           lw      $t3,($sp)       #pop stack to t3
-           sub     $sp,$sp,4       # push t3 onto the stack
+       lw      $t3,($sp)       #pop stack to t3
+       sub     $sp,$sp,4       # push t3 onto the stack
            
-           move   $a0, $t3
-           li     $v0, 11
-           syscall
-           bne  $t1, 0 printLoop
+       move   $a0, $t3
+       li     $v0, 11
+       syscall
+       bne     $t1, 0 printLoop
            
 #-----------------------end of hex conversion------------------------------
 
@@ -176,10 +177,76 @@ dectime:
        li      $v0 4
        syscall
        
-       move    $a0   $s0          # print value of s0
-       li      $v0   1
-       syscall
        
+binToSignedDecimal:
+
+       move      $t0, $s0       # $t0 contains a signed 32 bit number
+       li      $t3, 0          #Onces Place
+       li      $t4, 0          #Tens Place
+       li      $t5, 0          #Hundreds Place
+       
+       move $t1, $t0
+       move $t2, $t0
+       andi $t1, $t1, 0x80000000 #mask all bit sign bit
+       bne  $t1, 0, twos_cmp 
+         
+subNum:sub $t2, $t2, 1
+       b incOnes
+       
+check: bne $t2, 0  subNum     
+         
+       b printDecimal   #MEEEEEEEEEEEEEEEEEEEEEEEEEEEEE          
+       
+twos_cmp:
+        xori $t2, 0xFFFFFFFF     
+        addi $t2, $t2, 1
+        b subNum
+
+        
+       #r5 r4 r3
+incOnes: add $t3, $t3, 1
+         bne $t3, 10, check
+         
+incTens: li, $t3, 0 #clear ones place    
+         addi $t4,  $t4, 1
+         bne $t4, 10, check
+ 
+incHuns:  li, $t4, 0 #clear tens place    
+          addi $t5,  $t5, 1
+          b check         
+          
+            
+printDecimal:
+         
+            beq $t1, 0, printHund
+            li   $a0, 45           #print Minus Sign
+            li     $v0, 11
+            syscall
+          
+ printHund: la   $t7,  hex_lut         
+ 
+            beq $t5, 0, printTens   #print Hundreds Place if it isn't Zero
+            add $t5, $t5, $t7
+            lb  $t5, ($t5)
+            move $a0, $t5                     
+            li     $v0, 11
+            syscall 
+            b printTensDef
+            
+printTens:    beq $t4, 0, printOnes   #print tens place if it isn't a leading zero
+printTensDef: add $t4, $t4, $t7
+              lb  $t4, ($t4)
+              move $a0, $t4                     
+              li     $v0, 11
+              syscall
+   
+ printOnes:   add  $t3, $t3, $t7
+              lb   $t3, ($t3)
+              move $a0, $t3                     
+              li   $v0, 11
+              syscall     
+              
+
        la      $a0 nl             # print new line
        li      $v0 4
        syscall
