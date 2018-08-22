@@ -68,7 +68,8 @@
        dc:  .asciiz "\n\nThe number in decimal is:\n"
        nl:  .asciiz "\n"
        one: .asciiz "1"
-       fs:  .asciiz "0x"
+       ox:  .asciiz "0x"
+       se:  .asciiz " found a 1 "
        hex_lut:  .byte '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' #lookup table from binary to ascii value as hex for 8 bits
 
 .text
@@ -80,6 +81,10 @@
        move    $a0   $t0
        li      $v0   4
        syscall
+       
+       la      $a0   nl          # print new line
+       li      $v0   4
+       syscall
 
        lb      $t1   ($t0)       # put first character of arg string into t1
        move    $a0   $t1
@@ -89,93 +94,31 @@
        
        li      $s0   0           # initialize s0 to zero
        
-       beq     $t1   $t2   rEq
        
- 
-back1: 
-       la      $a0   nl          # print a new line
-       li      $v0   4
-       syscall
-       
-       addi    $t3   $zero 0     # initialize index to 0
-       addi    $t4   $zero 8     # initialize power to 7
-       addi    $t5   $zero 0     # initialize binary value to 0       
-       
-while:
-       beq     $t3   8     hextime
-       lb      $t1   ($t0)       # put first character of arg string into t3
-       move    $a0   $t1
-       #li      $v0   11	 # print each character of string
-       #syscall
-      
-       beq     $t1   $t2   rEq2  # ones found in binary
+#---------------------------sign extension------------------------------
 
-midw:      
-       addi    $t0   $t0   1
-       li      $v0   4
-       la      $a0   nl          # print a new line
-       #syscall
-       
-       addi    $t3   $t3   1
-       j       while
+intFromStr:  li  $t3, 0x00000080   #t3 holds mask
+             li  $t2, 0  #loop counter
+             li  $t5, 0x00000000 #final int
+            
+loop900:     add $t4, $t0, $t2  #get address of charecter
+             lb  $t4, ($t4)     #store charecter iun t4
+             beq $t4, 48, shiftMask
+             
+             or  $t5, $t5, $t3
+shiftMask:   srl $t3, $t3, 1
+             add $t2, $t2, 1       
+             bne $t2, 8,  loop900
+             
+             li $t2, 0x00000080
+             and $t2, $t2, $t5
+             beq $t2, 0, done 
+             addi $t5, $t5, 0xFFFFFF00          
+             
+done:        add $t4, $t4, 0 #NONDONSADNOSANDOSDNGFKSDNGNFDKJLGNDFSKLGNDWKSL
 
-rEq2:
-       sub     $t4   $t4   1
-       move    $a0   $t4         # print the power
-       li      $v0   1
-       #syscall
-       
-       li      $t7  0
-       beq     $t4  $t7 found0
-       li      $t7  1
-       beq     $t4  $t7 found1
-       li      $t7  2
-       beq     $t4  $t7 found2
-       li      $t7  3
-       beq     $t4  $t7 found3
-       li      $t7  4
-       beq     $t4  $t7 found4
-       li      $t7  5
-       beq     $t4  $t7 found5
-       li      $t7  6
-       beq     $t4  $t7 found6
-       li      $t7  7
-       beq     $t4  $t7 found7
-       
-       j       midw
+#-----------------------------hex conversion------------------------------
 
-found0:
-       add     $s0  $s0 1
-       j       midw
-       
-found1:
-       add     $s0  $s0 2
-       j       midw
-       
-found2:
-       add     $s0  $s0 4
-       j       midw
-       
-found3:
-       add     $s0  $s0 8
-       j       midw
-       
-found4:
-       add     $s0  $s0 16
-       j       midw
-       
-found5:
-       add     $s0  $s0 32
-       j       midw
-       
-found6:
-       add     $s0  $s0 64
-       j       midw
-       
-found7:
-       add     $s0  $s0 128
-       j       midw
-       
 hextime:
        la      $a0    hx          # print hex message
        li      $v0    4
@@ -189,14 +132,13 @@ hextime:
        lb      $t1   ($t0)         # put first character of arg string into t1
        move    $a0   $t1
        
-       
-bin2hex:  
-       la      $a0  fs          #print new line
-       li      $v0 4
+       la      $a0    ox          # print start of hex
+       li      $v0    4
        syscall
        
-       la      $t7, hex_lut
-       li      $t0, -4 # $t0 contains a signed 32 bit number
+bin2hex:  
+       la      $t7,  hex_lut
+       move    $t0, $t5 # $t0 contains a signed 32 bit number
        li      $t1, 8  #loop counter
 
               
@@ -225,11 +167,10 @@ printLoop: sub     $t1, $t1, 1     #sub loop counter
            move   $a0, $t3
            li     $v0, 11
            syscall
-           bne     $t1, 0 printLoop
-       
-           li      $t0,  0            #place holder line to put break point at (I DONT DO ANYTHING)
+           bne  $t1, 0 printLoop
+           
+#-----------------------end of hex conversion------------------------------
 
-       
 dectime:  
        la      $a0 dc             # print dec message
        li      $v0 4
@@ -246,15 +187,6 @@ dectime:
        li      $v0   10           # end
        syscall 
 
-printFs:
-       la      $a0   fs
-       li      $v0   4
-       syscall
-       j       bin2hex
-     
-rEq:
-       add     $s0   $s0   -256   # sign extend by adding the 24 ones in front of the 8 bit binary number
-       j       back1
-       
+
   
 
