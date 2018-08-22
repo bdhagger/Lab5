@@ -68,9 +68,8 @@
        dc:  .asciiz "\n\nThe number in decimal is:\n"
        nl:  .asciiz "\n"
        one: .asciiz "1"
-       fs:  .asciiz "0xFFFFFF"
-       os:  .asciiz "0x000000"
-      #hxA: .word   48,49,50,51,52,53,54,55,56,57,65,66,67,68,69,70
+       fs:  .asciiz "0x"
+       hex_lut:  .byte '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' #lookup table from binary to ascii value as hex for 8 bits
 
 .text
        la      $a0   bn          # print binary message
@@ -190,45 +189,46 @@ hextime:
        lb      $t1   ($t0)         # put first character of arg string into t1
        move    $a0   $t1
        
-       beq     $t1   $t2   printFs # if negative print Fs
        
-       la      $a0   os            # else prints 0s
-       li      $v0   4
+bin2hex:  
+       la      $a0  fs          #print new line
+       li      $v0 4
        syscall
        
-       #move    $a0 $s0            #print hex illegally
-       #li      $v0 34
-       #syscall
+       la      $t7, hex_lut
+       li      $t0, -4 # $t0 contains a signed 32 bit number
+       li      $t1, 8  #loop counter
 
-hex1:
-       beq     $t3   4     hex2
-       
-       lb      $t1   ($t0)       # start at beginning of string
-     
-       move    $a0   $t3 
-       li      $v0   1	         # print first 4 chars
-       #syscall
+              
+loop:  sub     $t1, $t1, 1     #sub loop counter
+       add     $t3, $t0, 0     #get original number
 
-       addi    $t3  $t3    1       
-       j      hex1
+       mul     $t4, $t1, 4     #get number of times to shift
+       srlv    $t3, $t3, $t4   #shift important bits to LSB
+       
+       and     $t3, $t3, 0xF   # mask off bits we don't care about
+       add     $t3, $t3, $t7   #add look up table offset
+       lb      $t3, ($t3)      # load in ascii value from table
+       sub     $sp,$sp,4       # push t3 onto the stack
+       sw      $t3,($sp)
+       bne     $t1, 0, loop    #exit loop when done
+       
        
 
-hex2:
-       li      $t3   4           # move to middle of string
+printHexFromStack:  li    $t1, 8  #loop counter
+                    addi  $sp, $sp, 28
+                    
+printLoop: sub     $t1, $t1, 1     #sub loop counter  
+           lw      $t3,($sp)       #pop stack to t3
+           sub     $sp,$sp,4       # push t3 onto the stack
+           
+           move   $a0, $t3
+           li     $v0, 11
+           syscall
+           bne     $t1, 0 printLoop
        
+           li      $t0,  0            #place holder line to put break point at (I DONT DO ANYTHING)
 
-hx2:  
-       beq     $t3   8     dectime
-       
-       lb      $t1   ($t0)       # put first character of arg string into t3
-       move    $a0   $t3
-      
-       li      $v0   1	         # print last 4 chars
-       #syscall
-       
-       addi    $t3  $t3    1
-       
-       j      hx2
        
 dectime:  
        la      $a0 dc             # print dec message
@@ -250,7 +250,7 @@ printFs:
        la      $a0   fs
        li      $v0   4
        syscall
-       j       hex1
+       j       bin2hex
      
 rEq:
        add     $s0   $s0   -256   # sign extend by adding the 24 ones in front of the 8 bit binary number
