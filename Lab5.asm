@@ -63,9 +63,9 @@
 
 .data 
        bn:  .asciiz "You entered the binary number:\n"
-       hx:  .asciiz "The hex representation of the sign-extended number is:\n"
-       dc:  .asciiz "The number in decimal is:\n"
-       nl:  .asciiz "\n\n"
+       hx:  .asciiz "\nThe hex representation of the sign-extended number is:\n"
+       dc:  .asciiz "\n\nThe number in decimal is:\n"
+       nl:  .asciiz "\n"
        one: .asciiz "1"
        re:  .asciiz " is equal to 1"
        
@@ -113,7 +113,7 @@ midw:
        addi    $t0   $t0   1
        li      $v0   4
        la      $a0   nl          # print a new line
-       syscall
+       #syscall
        
        addi    $t3   $t3   1
        j       while
@@ -122,7 +122,7 @@ rEq2:
        sub     $t4   $t4   1
        move    $a0   $t4         # print the power
        li      $v0   1
-       syscall
+       #syscall
        
        li      $t7  0
        beq     $t4  $t7 found0
@@ -176,8 +176,25 @@ found7:
        j       midw
        
 exit:
+
+       la      $a0 hx     # print hex message
+       li      $v0 4
+       syscall
+  
+       move    $a0 $s0
+       li      $v0 34
+       syscall
+  
+       la      $a0 dc     # print dec message
+       li      $v0 4
+       syscall
+       
        move    $a0   $s0         # print value of s0
        li      $v0   1
+       syscall
+       
+       la      $a0 nl     # print new line
+       li      $v0 4
        syscall
        
        li      $v0   10          # end
@@ -188,6 +205,4 @@ rEq:
        j       back1
        
   
-  #la      $a0 hx     # print hex message
-  #li      $v0 4
-  #syscall
+
