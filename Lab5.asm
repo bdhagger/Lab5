@@ -19,8 +19,7 @@
 # PSEUDO CODE
 
 # read and store the 8-bit number string
-# prepare v0 to print string
-# print “You entered the binary number:/n” from data declarations
+# print “You entered the binary number:” from data declarations
 # print original 8 bit number string and new line
 #
 # loop through each character in the the 8-bit number string
@@ -31,12 +30,12 @@
 #    assign each chunk to its corresponding hex value
 # loop through each hex digit
 #    convert each hex digit to a string
-# print “The hex representation of the sign-extended number is:\n” from data declarations
+# print “The hex representation of the sign-extended number is:” from data declarations
 # print hex string and new line
 #
 # calculate the hex digits as a decimal based on A-F
 # convert each decimal digit to a string
-# print “The number in decimal is:\n” from data declarations
+# print “The number in decimal is:” from data declarations
 # print decimal string and new line
 # exit the program
 
@@ -54,8 +53,8 @@
 # t4 holds the hex look up table address
 # t5 holds a number to shift by
 # t6 is a ones place
-# t7 is a twos place
-# t8 is a threes place
+# t7 is a tens place
+# t8 is a hundreds place
 
 # s0 stores the 32-bit sign extended value entered by the user
 # v0 sets the syscalls to print strings and characters only
@@ -162,7 +161,7 @@ dectime:
        li      $v0     4
        syscall
        
-binToSignedDecimal:
+binToSignedDec:
        li      $t6      0                    # Onces Place
        li      $t7      0                    # Tens Place
        li      $t8      0                    # Hundreds Place
@@ -170,7 +169,7 @@ binToSignedDecimal:
        move    $t1     $s0
        move    $t2     $s0
        andi    $t1     $t1        0x80000000 # mask all bit sign bit
-       bne     $t1     0,         twos_cmp 
+       bne     $t1     0          twos_cmp 
          
 subNum:
        sub     $t2     $t2        1
@@ -189,25 +188,25 @@ incOnes:
       bne      $t6    10          check
          
 incTens: 
-      li       $t6     0                     #clear ones place    
+      li       $t6     0                     # clear ones place    
       addi     $t7     $t7        1
       bne      $t7     10         check
  
 incHuns:  
-      li       $t7     0                     #clear tens place    
+      li       $t7     0                     # clear tens place    
       addi     $t8     $t8        1
       j        check         
             
 printDec:
       beq      $t1     0          printHund
-      li       $a0     45                    #print minus Sign
+      li       $a0     45                    # print minus Sign
       li       $v0     11
       syscall
           
  printHund: 
        la      $t4     hx_lut         
  
-       beq     $t8     0          cond10s    #print Hundreds Place if it isn't Zero
+       beq     $t8     0          cond10s    # print Hundreds Place if it isn't Zero
        add     $t8     $t8        $t4
        lb      $t8     ($t8)
        move    $a0     $t8                     
@@ -216,7 +215,7 @@ printDec:
        j       print10s
             
 cond10s:    
-       beqz    $t4     printOnes             #print tens place if it isn't a leading zero
+       beqz    $t7     printOnes             # print tens place if it isn't a leading zero
 
 print10s: 
        add     $t7     $t7        $t4
@@ -232,11 +231,11 @@ print10s:
        li      $v0     11
        syscall     
 
-       la      $a0     nl             # print new line
+       la      $a0     nl                    # print new line
        li      $v0     4
        syscall
        
-       li      $v0     10           # end
+       li      $v0     10                    # end
        syscall 
 
 
