@@ -10,7 +10,8 @@ What was your approach to converting the binary number to decimal?
 To convert the binary number to a decimal, I took my 32-bit sign-extended
 value and manipulated it to first print the hundreds place, then the tens 
 place, and finally the ones place. I masked and XORed the bits of the number
-then made special conditions for which characters get to be printed.
+then made special conditions for which characters get to be printed so that 
+zeros and minus signs only appear when needed.
 
 What did you learn in this lab?
 In this lab, I got to learn about how arrays and printing characters worked
