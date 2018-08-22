@@ -53,6 +53,7 @@
 # t3 is used as an index
 # t4 is used for a power
 # t5 holds the value of the binary position (2^(7 - i))
+# t6 holds integer value for 4 bits of the string
 
 # s0 stores the 32-bit sign extended value entered by the user
 # v0 sets the syscalls to print strings and characters only
@@ -69,7 +70,7 @@
        one: .asciiz "1"
        fs:  .asciiz "0xFFFFFF"
        os:  .asciiz "0x000000"
-       
+      #hxA: .word   48,49,50,51,52,53,54,55,56,57,65,66,67,68,69,70
 
 .text
        la      $a0   bn          # print binary message
@@ -177,48 +178,82 @@ found7:
        j       midw
        
 hextime:
-       la      $a0 hx     # print hex message
-       li      $v0 4
+       la      $a0    hx          # print hex message
+       li      $v0    4
        syscall
        
-       lw      $t0   ($a1)       # read and print program argument string
-       lb      $t1   ($t0)       # put first character of arg string into t1
+       li      $t3    0
+       li      $t6    0
+       li      $t4    8
+       
+       lw      $t0   ($a1)         # read and print program argument string
+       lb      $t1   ($t0)         # put first character of arg string into t1
        move    $a0   $t1
        
-       beq     $t1   $t2   printFs
+       beq     $t1   $t2   printFs # if negative print Fs
        
-       la      $a0   os
+       la      $a0   os            # else prints 0s
        li      $v0   4
        syscall
-
-hex:
-       #move    $a0 $s0
+       
+       #move    $a0 $s0            #print hex illegally
        #li      $v0 34
        #syscall
-  
-       la      $a0 dc     # print dec message
+
+hex1:
+       beq     $t3   4     hex2
+       
+       lb      $t1   ($t0)       # start at beginning of string
+     
+       move    $a0   $t3 
+       li      $v0   1	         # print first 4 chars
+       #syscall
+
+       addi    $t3  $t3    1       
+       j      hex1
+       
+
+hex2:
+       li      $t3   4           # move to middle of string
+       
+
+hx2:  
+       beq     $t3   8     dectime
+       
+       lb      $t1   ($t0)       # put first character of arg string into t3
+       move    $a0   $t3
+      
+       li      $v0   1	         # print last 4 chars
+       #syscall
+       
+       addi    $t3  $t3    1
+       
+       j      hx2
+       
+dectime:  
+       la      $a0 dc             # print dec message
        li      $v0 4
        syscall
        
-       move    $a0   $s0         # print value of s0
+       move    $a0   $s0          # print value of s0
        li      $v0   1
        syscall
        
-       la      $a0 nl     # print new line
+       la      $a0 nl             # print new line
        li      $v0 4
        syscall
        
-       li      $v0   10          # end
-       syscall
+       li      $v0   10           # end
+       syscall 
 
 printFs:
        la      $a0   fs
        li      $v0   4
        syscall
-       j       hex
+       j       hex1
      
 rEq:
-       add     $s0   $s0   -256  # sign extend by adding the 24 1s in front of the 8 bit binary number
+       add     $s0   $s0   -256   # sign extend by adding the 24 ones in front of the 8 bit binary number
        j       back1
        
   
