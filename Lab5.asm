@@ -52,6 +52,7 @@
 # t2 holds the string "1" to compare with 1st character
 # t3 is used as an index
 # t4 is used for a power
+# t5 holds the value of the binary position (2^(7 - i))
 
 # s0 stores the 32-bit sign extended value entered by the user
 # v0 sets the syscalls to print strings and characters only
@@ -79,24 +80,11 @@
        li      $v0   4
        syscall
 
-       #la      $a0 nl         # print a new line
-       #li      $v0 4
-       #syscall
-       
        lb      $t1   ($t0)       # put first character of arg string into t1
        move    $a0   $t1
-       #li      $v0 11
-       #syscall
-       
-       #la      $a0 nl         # print a new line
-       #li      $v0 4
-       #syscall
-       
        
        lb      $t2   one         # load string "1" into t2
        move    $a0   $t2
-       #li      $v0 11
-       #syscall
        
        li      $s0   0           # initialize s0 to zero
        
@@ -110,15 +98,16 @@ back1:
        
        addi    $t3   $zero 0     # initialize index to 0
        addi    $t4   $zero 8     # initialize power to 7
+       addi    $t5   $zero 0     # initialize binary value to 0       
        
 while:
        beq     $t3   8     exit
        lb      $t1   ($t0)       # put first character of arg string into t3
        move    $a0   $t1
-       li      $v0   11
-       syscall
+       #li      $v0   11	 # print each character of string
+       #syscall
       
-       beq     $t1   $t2   rEq2 
+       beq     $t1   $t2   rEq2  # ones found in binary
 
 midw:      
        addi    $t0   $t0   1
@@ -130,19 +119,62 @@ midw:
        j       while
 
 rEq2:
-       #sub     $t4 $t4 $t3
-       move    $a0 $t3         # print the power
-       li      $v0 1
+       sub     $t4   $t4   1
+       move    $a0   $t4         # print the power
+       li      $v0   1
        syscall
        
-       sub     $t4 $t4 1
-       move    $a0 $t4         # print the power
-       li      $v0 1
-       syscall
+       li      $t7  0
+       beq     $t4  $t7 found0
+       li      $t7  1
+       beq     $t4  $t7 found1
+       li      $t7  2
+       beq     $t4  $t7 found2
+       li      $t7  3
+       beq     $t4  $t7 found3
+       li      $t7  4
+       beq     $t4  $t7 found4
+       li      $t7  5
+       beq     $t4  $t7 found5
+       li      $t7  6
+       beq     $t4  $t7 found6
+       li      $t7  7
+       beq     $t4  $t7 found7
        
        j       midw
 
-
+found0:
+       add     $s0  $s0 1
+       j       midw
+       
+found1:
+       add     $s0  $s0 2
+       j       midw
+       
+found2:
+       add     $s0  $s0 4
+       j       midw
+       
+found3:
+       add     $s0  $s0 8
+       j       midw
+       
+found4:
+       add     $s0  $s0 16
+       j       midw
+       
+found5:
+       add     $s0  $s0 32
+       j       midw
+       
+found6:
+       add     $s0  $s0 64
+       j       midw
+       
+found7:
+       add     $s0  $s0 128
+       j       midw
+       
 exit:
        move    $a0   $s0         # print value of s0
        li      $v0   1
@@ -155,12 +187,6 @@ rEq:
        add     $s0   $s0   -256  # sign extend by adding the 24 1s in front of the 8 bit binary number
        j       back1
        
-       
-
-  
- # move    $a0 $s0     # print hex message
- # li      $v0 11
- # syscall
   
   #la      $a0 hx     # print hex message
   #li      $v0 4
