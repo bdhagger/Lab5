@@ -48,7 +48,9 @@
 # a1 is the first program argument
 
 # t0 holds the address of the program argument
-# t1 
+# t1 is a loop index
+# t2 holds a bit mask
+# t3 stores a character from the argument string
 
 
 # s0 stores the 32-bit sign extended value entered by the user
@@ -85,26 +87,26 @@
 #---------------------------sign extension------------------------------
 
 intFromStr:  
-       li  $t3, 0x00000080   #t3 holds mask
-       li  $t2, 0            #loop counter
-       li  $s0, 0x00000000  #final int
+       li  $s0, 0x00000000   #final int
+       li  $t1, 0            #loop counter
+       li  $t2, 0x00000080   #t3 holds mask
             
-loop900:     
-       add $t4, $t0, $t2  #get address of charecter
-       lb  $t4, ($t4)     #store charecter iun t4
-       beq $t4, 48, shiftMask
+bitLoop:     
+       add $t3, $t0, $t1  #get address of character
+       lb  $t3, ($t3)     #store character in t4
+       beq $t3, 48, shiftMask
              
-       or  $s0, $s0, $t3
+       or  $s0, $s0, $t2
        
 shiftMask:   
 
-       srl $t3, $t3, 1
-       add $t2, $t2, 1       
-       bne $t2, 8,  loop900
+       srl $t2, $t2, 1
+       add $t1, $t1, 1       
+       bne $t1, 8,  bitLoop
              
-       li $t2, 0x00000080
-       and $t2, $t2, $s0
-       beq $t2, 0, hextime 
+       li $t1, 0x00000080
+       and $t1, $t1, $s0
+       beq $t1, 0, hextime 
        addi $s0, $s0, 0xFFFFFF00          
 
 #-----------------------------hex conversion------------------------------
@@ -113,15 +115,7 @@ hextime:
        la      $a0    hx          # print hex message
        li      $v0    4
        syscall
-       
-       li      $t3    0
-       li      $t6    0
-       li      $t4    8
-       
-       lw      $t0   ($a1)         # read and print program argument string
-       lb      $t1   ($t0)         # put first character of arg string into t1
-       move    $a0   $t1
-       
+
        la      $a0    ox          # print start of hex
        li      $v0    4
        syscall
@@ -145,8 +139,6 @@ loop:  sub     $t1, $t1, 1     #sub loop counter
        sw      $t3,($sp)
        bne     $t1, 0, loop    #exit loop when done
        
-       
-
 printHexFromStack:  
        li    $t1, 8  #loop counter
                     addi  $sp, $sp, 28
