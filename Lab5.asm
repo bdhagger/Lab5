@@ -162,7 +162,6 @@ dectime:
        li      $v0 4
        syscall
        
-       
 binToSignedDecimal:
        li      $t6, 0          #Onces Place
        li      $t7, 0          #Tens Place
@@ -211,7 +210,7 @@ printDecimal:
        la   $t4,  hex_lut         
  
        beq $t8, 0, printTens   #print Hundreds Place if it isn't Zero
-       add $t8, $t8, $t7
+       add $t8, $t8, $t4
        lb  $t8, ($t8)
        move $a0, $t8                     
        li     $v0, 11
@@ -219,7 +218,7 @@ printDecimal:
        j printTensDef
             
 printTens:    
-       beqz $t7  printOnes   #print tens place if it isn't a leading zero
+       beqz $t4  printOnes   #print tens place if it isn't a leading zero
 
 printTensDef: 
        add $t7, $t7, $t4
