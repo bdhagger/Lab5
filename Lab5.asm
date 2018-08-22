@@ -67,7 +67,8 @@
        dc:  .asciiz "\n\nThe number in decimal is:\n"
        nl:  .asciiz "\n"
        one: .asciiz "1"
-       re:  .asciiz " is equal to 1"
+       fs:  .asciiz "0xFFFFFF"
+       os:  .asciiz "0x000000"
        
 
 .text
@@ -101,7 +102,7 @@ back1:
        addi    $t5   $zero 0     # initialize binary value to 0       
        
 while:
-       beq     $t3   8     exit
+       beq     $t3   8     hextime
        lb      $t1   ($t0)       # put first character of arg string into t3
        move    $a0   $t1
        #li      $v0   11	 # print each character of string
@@ -175,15 +176,25 @@ found7:
        add     $s0  $s0 128
        j       midw
        
-exit:
-
+hextime:
        la      $a0 hx     # print hex message
        li      $v0 4
        syscall
-  
-       move    $a0 $s0
-       li      $v0 34
+       
+       lw      $t0   ($a1)       # read and print program argument string
+       lb      $t1   ($t0)       # put first character of arg string into t1
+       move    $a0   $t1
+       
+       beq     $t1   $t2   printFs
+       
+       la      $a0   os
+       li      $v0   4
        syscall
+
+hex:
+       #move    $a0 $s0
+       #li      $v0 34
+       #syscall
   
        la      $a0 dc     # print dec message
        li      $v0 4
@@ -199,6 +210,12 @@ exit:
        
        li      $v0   10          # end
        syscall
+
+printFs:
+       la      $a0   fs
+       li      $v0   4
+       syscall
+       j       hex
      
 rEq:
        add     $s0   $s0   -256  # sign extend by adding the 24 1s in front of the 8 bit binary number
