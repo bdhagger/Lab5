@@ -51,7 +51,11 @@
 # t1 is a loop index
 # t2 holds a bit mask
 # t3 stores a character from the argument string
-
+# t4 holds the hex look up table address
+# t5 holds a number to shift by
+# t6 is a ones place
+# t7 is a twos place
+# t8 is a threes place
 
 # s0 stores the 32-bit sign extended value entered by the user
 # v0 sets the syscalls to print strings and characters only
@@ -121,29 +125,28 @@ hextime:
        syscall
        
 bin2hex:  
-       la      $t7,  hex_lut
-       move    $t0, $s0 # $t0 contains a signed 32 bit number
-       li      $t1, 8  #loop counter
-
+       la      $t4,  hex_lut
+       li      $t1, 8         #loop counter
               
 loop:  sub     $t1, $t1, 1     #sub loop counter
-       add     $t3, $t0, 0     #get original number
+       add     $t3, $s0, 0     #get original number
 
-       mul     $t4, $t1, 4     #get number of times to shift
-       srlv    $t3, $t3, $t4   #shift important bits to LSB
+       mul     $t5, $t1, 4     #get number of times to shift
+       srlv    $t3, $t3, $t5   #shift important bits to LSB
        
        and     $t3, $t3, 0xF   # mask off bits we don't care about
-       add     $t3, $t3, $t7   #add look up table offset
+       add     $t3, $t3, $t4   #add look up table offset
        lb      $t3, ($t3)      # load in ascii value from table
-       sub     $sp,$sp,4       # push t3 onto the stack
-       sw      $t3,($sp)
+       sub     $sp,  $sp,4       # push t3 onto the stack
+       sw      $t3, ($sp)
        bne     $t1, 0, loop    #exit loop when done
        
 printHexFromStack:  
-       li    $t1, 8  #loop counter
-                    addi  $sp, $sp, 28
+       li      $t1, 8  #loop counter
+       addi    $sp, $sp, 28
                     
-printLoop: sub     $t1, $t1, 1     #sub loop counter  
+printLoop: 
+       sub     $t1, $t1, 1     #sub loop counter  
        lw      $t3,($sp)       #pop stack to t3
        sub     $sp,$sp,4       # push t3 onto the stack
            
@@ -161,22 +164,20 @@ dectime:
        
        
 binToSignedDecimal:
-
-       move      $t0, $s0       # $t0 contains a signed 32 bit number
-       li      $t3, 0          #Onces Place
-       li      $t4, 0          #Tens Place
-       li      $t5, 0          #Hundreds Place
+       li      $t6, 0          #Onces Place
+       li      $t7, 0          #Tens Place
+       li      $t8, 0          #Hundreds Place
        
-       move $t1, $t0
-       move $t2, $t0
+       move $t1, $s0
+       move $t2, $s0
        andi $t1, $t1, 0x80000000 #mask all bit sign bit
-       bne  $t1, 0, twos_cmp 
+       bne  $t1, 0,   twos_cmp 
          
-subNum:sub $t2, $t2, 1
+subNum:
+       sub $t2, $t2, 1
        j incOnes
        
 check: bne $t2, 0  subNum     
-         
        j printDecimal            
        
 twos_cmp:
@@ -185,21 +186,20 @@ twos_cmp:
        j subNum
 
         
-         #r5 r4 r3
+       #r5 r4 r3
 incOnes: 
-      add $t3, $t3, 1
-      bne $t3, 10, check
+      add $t6, $t6, 1
+      bne $t6, 10, check
          
 incTens: 
-      li, $t3, 0 #clear ones place    
-      addi $t4,  $t4, 1
-      bne $t4, 10, check
+      li, $t6, 0 #clear ones place    
+      addi $t7,  $t7, 1
+      bne $t7, 10, check
  
 incHuns:  
-      li, $t4, 0 #clear tens place    
-      addi $t5,  $t5, 1
+      li, $t7, 0 #clear tens place    
+      addi $t8,  $t8, 1
       j check         
-          
             
 printDecimal:
       beq $t1, 0, printHund
@@ -208,30 +208,30 @@ printDecimal:
       syscall
           
  printHund: 
-       la   $t7,  hex_lut         
+       la   $t4,  hex_lut         
  
-       beq $t5, 0, printTens   #print Hundreds Place if it isn't Zero
-       add $t5, $t5, $t7
-       lb  $t5, ($t5)
-       move $a0, $t5                     
+       beq $t8, 0, printTens   #print Hundreds Place if it isn't Zero
+       add $t8, $t8, $t7
+       lb  $t8, ($t8)
+       move $a0, $t8                     
        li     $v0, 11
        syscall 
        j printTensDef
             
 printTens:    
-       beqz $t4  printOnes   #print tens place if it isn't a leading zero
+       beqz $t7  printOnes   #print tens place if it isn't a leading zero
 
 printTensDef: 
-       add $t4, $t4, $t7
-       lb  $t4, ($t4)
-       move $a0, $t4                     
+       add $t7, $t7, $t4
+       lb  $t7, ($t7)
+       move $a0, $t7                     
        li     $v0, 11
        syscall
    
  printOnes:   
-       add  $t3, $t3, $t7
-       lb   $t3, ($t3)
-       move $a0, $t3                     
+       add  $t6, $t6, $t4
+       lb   $t6, ($t6)
+       move $a0, $t6                     
        li   $v0, 11
        syscall     
 
