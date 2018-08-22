@@ -23,20 +23,23 @@
 # print original 8 bit number string and new line
 #
 # loop through each character in the the 8-bit number string
-#    convert each character to an integer
-# sign extend the 8-bit number to 32 bits and store it in s0
+#    convert each character to an integer with a mask
+#    shift the number and add 32 bits then store it in s0
 #
-# loop through every chunk of 4 bits in s0
-#    assign each chunk to its corresponding hex value
-# loop through each hex digit
-#    convert each hex digit to a string
 # print “The hex representation of the sign-extended number is:” from data declarations
-# print hex string and new line
+# loop through characters in number string
+#    shift and mask bits
+#    push them to stack
+# loop through each hex digit
+#    pop off stack 
+#    print ASCII hex
+# print new line
 #
-# calculate the hex digits as a decimal based on A-F
-# convert each decimal digit to a string
 # print “The number in decimal is:” from data declarations
-# print decimal string and new line
+# calculate each decimal digit like you would on paper
+# check if each place rolls over to the next place when adding 1
+# set conditions for unwanted zeros in front of number
+# print decimal string by each digit and print a new line
 # exit the program
 
 #########################################################################################
@@ -97,20 +100,20 @@ intFromStr:
 bitLoop:     
        add     $t3     $t0        $t1        # get address of character
        lb      $t3     ($t3)                 # store character in t4
-       beq     $t3     48         shiftMask
+       beq     $t3     48         shiftMask  # check if shift is needed
      
-       or      $s0     $s0        $t2
+       or      $s0     $s0        $t2        # OR the bits
        
 shiftMask:   
 
-       srl     $t2     $t2        1
+       srl     $t2     $t2        1          # shift the bits
        add     $t1     $t1        1       
        bne     $t1     8          bitLoop
              
        li      $t1     0x00000080
-       and     $t1     $t1        $s0
+       and     $t1     $t1        $s0        # AND to get needed bits
        beq     $t1     0          hextime 
-       addi    $s0     $s0        0xFFFFFF00          
+       addi    $s0     $s0        0xFFFFFF00 # sign extend with Fs         
 
 #-----------------------------hex conversion------------------------------
 
@@ -149,7 +152,7 @@ printLoop:
        lw      $t3     ($sp)                 # pop stack to t3
        sub     $sp     $sp        4          # push t3 onto the stack
            
-       move    $a0     $t3
+       move    $a0     $t3                   # print ASCII hex
        li      $v0     11
        syscall
        bne     $t1     0          printLoop
@@ -169,22 +172,22 @@ binToSignedDec:
        move    $t1     $s0
        move    $t2     $s0
        andi    $t1     $t1        0x80000000 # mask all bit sign bit
-       bne     $t1     0          twos_cmp 
+       bne     $t1     0          twos_cmp   # conditional statement
          
 subNum:
-       sub     $t2     $t2        1
+       sub     $t2     $t2        1          # subtract original value
        j       incOnes
        
-check: bne     $t2     0          subNum     
+check: bne     $t2     0          subNum     # check if digit is a zero
        j       printDec            
        
 twos_cmp:
-       xori    $t2     0xFFFFFFFF     
+       xori    $t2     0xFFFFFFFF            # XOR the bits
        addi    $t2     $t2        1
        j       subNum
 
 incOnes: 
-      add      $t6    $t6         1
+      add      $t6    $t6         1          # increment the value of the digit
       bne      $t6    10          check
          
 incTens: 
@@ -206,11 +209,11 @@ printDec:
  printHund: 
        la      $t4     hx_lut         
  
-       beq     $t8     0          cond10s    # print Hundreds Place if it isn't Zero
+       beq     $t8     0          cond10s    # print hundreds place if it isn't Zero
        add     $t8     $t8        $t4
        lb      $t8     ($t8)
        move    $a0     $t8                     
-       li      $v0     11
+       li      $v0     11                    # print ASCII decimal in 100s place
        syscall 
        j       print10s
             
@@ -221,14 +224,14 @@ print10s:
        add     $t7     $t7        $t4
        lb      $t7     ($t7)
        move    $a0     $t7                     
-       li      $v0     11
+       li      $v0     11                    # print ASCII decimal in 10s place
        syscall
    
  printOnes:   
        add     $t6     $t6        $t4
        lb      $t6     ($t6)
        move    $a0     $t6                     
-       li      $v0     11
+       li      $v0     11                    # print ASCII decimal in 1s place
        syscall     
 
        la      $a0     nl                    # print new line
