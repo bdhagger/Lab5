@@ -70,18 +70,10 @@
 .text
      
 #---------- play_song ----------
-play_song:  
-            # The string address is already in $a0
-            # li       $v0         4 
-            # syscall
-            
-            # $a1 has the tempo of song in beats per minute
-            # move     $a0, $a1
-            # li      $v0 1
-            # syscall
-            
-            # call all the jals here
-            jr       $ra
+play_song:                                          # call subroutines here
+       jal     get_song_length
+       jal     play_note      
+       jr      $ra
        
 #------- get_song_length -------
 get_song_length:
@@ -106,23 +98,23 @@ space:
 numNotes:
        move     $v0             $t4
        jr       $ra
-       
 
-           
 #---------- play_note ----------
 play_note:
-            jr       $ra
+       jal      read_note
+       li       $v0             33
+       jr       $ra
                
 #---------- read_note ----------
 read_note:
             
-            jr       $ra
+       jr       $ra
                   
 #---------- get_pitch ----------
 get_pitch:
-            jr       $ra
+       jr       $ra
       
 #---------- get_rhythm ----------
 get_rhythm:                                      
-            jr       $ra
+       jr       $ra
        
