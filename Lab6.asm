@@ -162,38 +162,40 @@ ePitch:
        j       gpBack
        
 esAccidental:                                          
-       sub    $t4               $t4       1            # decrease accidental
-       j      gpBack
+       sub     $t4              $t4       1            # decrease accidental
+       j       gpBack
        
 isAccidental:                                       
-       add    $t4               $t4       1            # increase accidental
-       j    gpBack
+       add     $t4              $t4       1            # increase accidental
+       j       gpBack
 
 fPitch:
-       li     $t4               65
-       j      gpBack  
+       li      $t4              65
+       j       gpBack  
        
 gPitch:
-       li     $t4               67
-       j      gpBack  
+       li      $t4              67
+       j       gpBack  
 
 rPitch:
-       li     $t4               0
-       j      gpBack
+       li      $t4              0
+       j       gpBack
          
 aOctave:
-       add    $t4               $t4       12
-       j    gpBack  
+       add     $t4              $t4       12
+       j       gpBack  
        
 cOctave:
-       sub    $t4               $t4       12
-       j    gpBack       
+       sub     $t4              $t4       12
+       j       gpBack       
 
 end:
-       move     $v0             $t4                    # move pitch value to output
-       jr $ra
+       move    $v0             $t4                    # move pitch value to first output
+       move    $v1             $t1                    # move address value to second output
+
+       jr      $ra
       
 #---------- get_rhythm ----------
 get_rhythm:                                      
-       jr $ra
+       jr      $ra
        
