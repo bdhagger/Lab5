@@ -190,12 +190,55 @@ cOctave:
        j       gpBack       
 
 end:
-       move    $v0             $t4                    # move pitch value to first output
-       move    $v1             $t1                    # move address value to second output
+       move    $v0             $t4                     # move pitch value to first output
+       sub     $t1 $t1 1
+       move    $v1             $t1                     # move address value to second output
 
        jr      $ra
-      
+
 #---------- get_rhythm ----------
-get_rhythm:                                      
+get_rhythm: 
+       la      $t1              ($a0)                  # t1 gets string address
+       li      $t3              0x20                   # t3 is an ascii space
+
+gr:                                                    
+       lb      $t0              ($t1)                  # current character
+       
+       beq     $t0              $t3       end2         # check if it's a space
+       
+       beq     $t0              0x31      rhythm1      # check which rhythm it is
+       beq     $t0              0x32      rhythm2
+       beq     $t0              0x34      rhythm4
+       beq     $t0              0x38      rhythm8
+       beq     $t0              0x36      rhythm16    
+       
+grBack:
+       add     $t1              $t1       1            # increment loop
+       j       gr
+       
+rhythm1:
+       li      $t4              1                      # 4 beats
+       j       grBack
+
+rhythm2:                                       
+       li      $t4              2                      # 2 beats
+       j       grBack
+       
+rhythm4:                                       
+       li      $t4              4                      # 1 beat
+       j       grBack
+
+rhythm8:        
+       li      $t4              8                      # 1/2 beat
+       j       grBack
+
+rhythm16:                                       
+       li      $t4              16                     # 1/4 beat
+       j       grBack
+       
+end2:
+       move    $v0             $t4                     # move pitch value to first output
+       sub     $t1             $t1        1
+       move    $v1             $t1                     # move address value to second output
        jr      $ra
        
