@@ -118,11 +118,14 @@ play_note:
 read_note:
        subi    $sp              $sp       4           # push  
        sw      $ra              ($sp)
-  
-       jal     get_rhythm
-
+      
        jal     get_pitch
+       move    $t5              $v0
+       
+       jal     get_rhythm
+       sll     $v0              $v0       16
 
+       add     $v0              $v0       $t5
        
        lw      $ra              ($sp)                 # Go back to old return address
        addi    $sp              $sp       4           # pop
