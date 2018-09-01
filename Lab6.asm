@@ -70,9 +70,17 @@
 .text
      
 #---------- play_song ----------
-play_song:                                             # call subroutines here
-       #jal     get_song_length
-       #jal     play_note      
+play_song:
+       subi    $sp              $sp       4          # push  
+       sw      $ra              ($sp)                                             
+       
+       jal     get_song_length
+     
+       # jal     play_note      
+       
+       lw      $ra              ($sp)                # Go back to old return address
+       addi    $sp              $sp       4          # pop
+       
        jr      $ra
        
 #------- get_song_length -------
@@ -101,14 +109,25 @@ numNotes:
 
 #---------- play_note ----------
 play_note:
-       #jal      read_note
+       jal      read_note
        li      $v0              33
+       syscall
        jr      $ra
                
 #---------- read_note ----------
 read_note:
-       # jal get_pitch
-       jr      $ra
+       subi    $sp              $sp       4           # push  
+       sw      $ra              ($sp)
+  
+       jal     get_rhythm
+
+       jal     get_pitch
+
+       
+       lw      $ra              ($sp)                 # Go back to old return address
+       addi    $sp              $sp       4           # pop
+       
+       jr $ra
                   
 #---------- get_pitch ----------
 get_pitch:
@@ -237,8 +256,10 @@ rhythm16:
        j       grBack
        
 end2:
+       add $t1 $t1 1
+       
        move    $v0             $t4                     # move pitch value to first output
-       sub     $t1             $t1        1
        move    $v1             $t1                     # move address value to second output
+       
        jr      $ra
        
