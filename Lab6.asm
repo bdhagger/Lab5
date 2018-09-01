@@ -71,15 +71,16 @@
      
 #---------- play_song ----------
 play_song:
-       subi    $sp              $sp       4          # push  
+       subi    $sp              $sp       4            # push  
        sw      $ra              ($sp)                                             
        
        jal     get_song_length
-     
-       # jal     play_note      
        
-       lw      $ra              ($sp)                # Go back to old return address
-       addi    $sp              $sp       4          # pop
+       
+       jal     play_note
+             
+       lw      $ra              ($sp)                  # Go back to old return address
+       addi    $sp              $sp       4            # pop
        
        jr      $ra
        
@@ -98,7 +99,7 @@ gsl:
        add     $t1              $t1       1            # increment loop
        j       gsl
          
-space:
+space: 
        add     $t4              $t4       1            # increment number of notes      
        add     $t1              $t1       1            # jump over space
        j       gsl
@@ -109,40 +110,79 @@ numNotes:
 
 #---------- play_note ----------
 play_note:
-       jal      read_note
+       beq     $a1              1         fourbeats
+       beq     $a1              2         twobeats
+       beq     $a1              4         onebeat
+       beq     $a1              8         halfbeat
+       beq     $a1              16        quarterbeat
+       
+pn:     
+       li      $a3              123
        li      $v0              33
        syscall
+       
        jr      $ra
+       
+fourbeats:
+       li $a1 2000
+       j pn
+       
+twobeats:
+       li $a1 1000
+       j pn
+       
+onebeat:
+       li $a1 500
+       j pn
+       
+halfbeat:
+       li $a1 250
+       j pn  
+           
+quarterbeat:
+       li $a1 125
+       j pn
                
 #---------- read_note ----------
 read_note:
-       subi    $sp              $sp       4           # push  
+       subi    $sp              $sp       4            # push  
        sw      $ra              ($sp)
       
        jal     get_pitch
        move    $t5              $v0
+       move    $t6              $v0
+       
        
        jal     get_rhythm
+   
+       
        sll     $v0              $v0       16
 
        add     $v0              $v0       $t5
+       move    $t5              $v0
+
+       #move    $a0              $t6
+       #move    $a1              $t7
+       #jal play_note
        
-       lw      $ra              ($sp)                 # Go back to old return address
-       addi    $sp              $sp       4           # pop
        
-       jr $ra
+       lw      $ra              ($sp)                  # Go back to old return address
+       addi    $sp              $sp       4            # pop
+
+       move    $v0              $t5
+       jr      $ra
                   
 #---------- get_pitch ----------
 get_pitch:
-       la      $t1              ($a0)                 # t1 gets string address
-       li      $t3              0x20                  # t3 is an ascii space
-       li      $t4              0                     # t4 temporarily holds the number of notes
+       la      $t1              ($a0)                  # t1 gets string address
+       li      $t3              0x20                   # t3 is an ascii space
+       li      $t4              0                      # t4 temporarily holds the number of notes
 
-gp:                                                   # loop through each character in note
-       lb      $t0              ($t1)                 # current character
-       beq     $t0              $t3       end         # check if it's a space
+gp:                                                    # loop through each character in note
+       lb      $t0              ($t1)                  # current character
+       beq     $t0              $t3       end          # check if it's a space
        
-       beq     $t0              0x61      aPitch      # check which <note> it is
+       beq     $t0              0x61      aPitch       # check which <note> it is
        beq     $t0              0x62      bPitch
        beq     $t0              0x63      cPitch
        beq     $t0              0x64      dPitch
@@ -212,9 +252,9 @@ cOctave:
        j       gpBack       
 
 end:
-       move    $v0             $t4                     # move pitch value to first output
+       move    $v0              $t4                    # move pitch value to first output
        sub     $t1 $t1 1
-       move    $v1             $t1                     # move address value to second output
+       move    $v1              $t1                    # move address value to second output
 
        jr      $ra
 
