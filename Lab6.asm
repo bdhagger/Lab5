@@ -1,7 +1,7 @@
 ####################################################################################
 # Created by:  Haggerty, Barbara Louise
 #              bdhagger
-#              23 August 2018
+#              31 August 2018
 #
 # Assignment:  Lab 6: Musical Subroutines
 #              CMPE 012, Computer Systems and Assembly Language
@@ -70,51 +70,130 @@
 .text
      
 #---------- play_song ----------
-play_song:                                          # call subroutines here
-       jal     get_song_length
-       jal     play_note      
+play_song:                                             # call subroutines here
+       #jal     get_song_length
+       #jal     play_note      
        jr      $ra
        
 #------- get_song_length -------
 get_song_length:
-       la      $t1              ($a0)               # t1 gets string address
-       li      $t2              0x0                 # t2 represents null
-       li      $t3              0x20                # t3 is an ascii space
-       li      $t4              1                   # t4 temporarily holds the number of notes
+       la      $t1              ($a0)                  # t1 gets string address
+       li      $t2              0x0                    # t2 represents null
+       li      $t3              0x20                   # t3 is an ascii space
+       li      $t4              1                      # t4 temporarily holds the number of notes
 
 gsl:
-       lb      $t0              ($t1)               # current character
-       beq     $t0              $t2       numNotes  # check if reached the end of the string
-       beq     $t0              $t3       space     # check if it's a space
+       lb      $t0              ($t1)                  # current character
+       beq     $t0              $t2       numNotes     # check if reached the end of the string
+       beq     $t0              $t3       space        # check if it's a space
        
-       add     $t1              $t1       1         # jump over space
+       add     $t1              $t1       1            # increment loop
        j       gsl
          
 space:
-       add     $t4              $t4       1         # increment number of notes      
-       add     $t1              $t1       1         # jump over space
+       add     $t4              $t4       1            # increment number of notes      
+       add     $t1              $t1       1            # jump over space
        j       gsl
        
 numNotes:
-       move     $v0             $t4
-       jr       $ra
+       move    $v0              $t4
+       jr      $ra
 
 #---------- play_note ----------
 play_note:
-       jal      read_note
-       li       $v0             33
-       jr       $ra
+       #jal      read_note
+       li      $v0              33
+       jr      $ra
                
 #---------- read_note ----------
 read_note:
-            
-       jr       $ra
+       # jal get_pitch
+       jr      $ra
                   
 #---------- get_pitch ----------
 get_pitch:
-       jr       $ra
+       la      $t1              ($a0)                 # t1 gets string address
+       li      $t3              0x20                  # t3 is an ascii space
+       li      $t4              0                     # t4 temporarily holds the number of notes
+
+gp:                                                   # loop through each character in note
+       lb      $t0              ($t1)                 # current character
+       beq     $t0              $t3       end         # check if it's a space
+       
+       beq     $t0              0x61      aPitch      # check which <note> it is
+       beq     $t0              0x62      bPitch
+       beq     $t0              0x63      cPitch
+       beq     $t0              0x64      dPitch
+       beq     $t0              0x65      ePitch
+       beq     $t0              0x66      fPitch
+       beq     $t0              0x67      gPitch
+       beq     $t0              0x72      rPitch
+       beq     $t0              0x69      isAccidental # check if there's an <accidental>
+       beq     $t0              0x27      aOctave      # check if there's an <octave>
+       beq     $t0              0x2C      cOctave
+
+gpBack:
+       add     $t1              $t1       1            # increment loop
+       j       gp
+       
+aPitch:
+       li      $t4              57
+       j       gpBack  
+
+bPitch:
+       li      $t4              59
+       j       gpBack  
+        
+cPitch:
+       li      $t4              60
+       j       gpBack  
+
+dPitch:
+       li      $t4              62
+       j       gpBack
+
+ePitch:
+       add     $t1              $t1       1
+       lb      $t0              ($t1)
+       beq     $t0              0x73      esAccidental # check if next character is s for accidental
+       
+       sub     $t1              $t1       1            # not accidental so go back a character
+       li      $t4              64
+       j       gpBack
+       
+esAccidental:                                          
+       sub    $t4               $t4       1            # decrease accidental
+       j      gpBack
+       
+isAccidental:                                       
+       add    $t4               $t4       1            # increase accidental
+       j    gpBack
+
+fPitch:
+       li     $t4               65
+       j      gpBack  
+       
+gPitch:
+       li     $t4               67
+       j      gpBack  
+
+rPitch:
+       li     $t4               0
+       j      gpBack
+         
+aOctave:
+       add    $t4               $t4       12
+       j    gpBack  
+       
+cOctave:
+       sub    $t4               $t4       12
+       j    gpBack       
+
+end:
+       move     $v0             $t4                    # move pitch value to output
+       jr $ra
       
 #---------- get_rhythm ----------
 get_rhythm:                                      
-       jr       $ra
+       jr $ra
        
